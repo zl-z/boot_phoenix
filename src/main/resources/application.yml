@@ -1,0 +1,49 @@
+spring:
+  mvc:
+    hiddenmethod:
+      filter:
+        enabled: true #开启HiddenHttpMethodFilter请求Delete
+    static-path-pattern: /static/**  #放开springboot对静态资源的拦截（判断路径符合这个规则的，为静态资源）
+  resources:
+    static-locations: classpath:/static/ #静态资源寻找位置
+  # 数据源 config
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost/phoenix_?serverTimezone=Asia/Shanghai&useUnicode=true&characterEncoding=utf-8&zeroDateTimeBehavior=convertToNull&useSSL=false&allowPublicKeyRetrieval=true
+    username: root
+    password: root
+  mail: #发送邮箱验证码 163邮箱
+    protocol: smtps
+    # 配置 SMTP 服务器地址
+    host: smtp.163.com
+    # 发送者邮箱
+    username: zlaost@163.com
+    # 配置密码，注意不是真正的密码，而是刚刚申请到的授权码
+    password: JUWMGIIKSJWDSSSN
+    # 端口号465或587
+    port: 465
+    # 默认的邮件编码为UTF-8
+    default-encoding: UTF-8
+
+  # thymeleaf config
+  thymeleaf:
+    enabled: true # 开启thymeleaf视图解析器
+    encoding: utf-8 # 编码
+    prefix: classpath:/templates/ # 前缀
+    suffix: .html # 后缀
+    mode: HTML # 严格的HTML语法模式
+    cache: false # 是否使用缓存
+
+mybatis-plus:
+  #mapper配置文件 扫描所有* xml文件
+  mapper-locations: classpath*:mapper/**/*.xml
+  configuration:
+    auto-mapping-behavior: full
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl # 打印sql语句
+  #指定包的别名
+  type-aliases-package: com.buba.boot_phoenix.*
+
+files:
+  upload:
+    #文件存储路径
+    path: D:/assignment/Big_Data_Knowledge/JAVA/IDEAWorkSpace/Vue_Boot/smart_campus/files/

@@ -1,0 +1,326 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.buba.boot_phoenix.student.mapper.StudentRegisterMapper">
+
+    <!--  学生登录信息  -->
+    <select id="getStudentLogin" resultType="StudentLoginDTO">
+        SELECT
+            bas.student_id,
+            bas.student_num,
+            bas.student_name,
+            reg.email,
+            reg.password,
+            bas.delete_flag,
+            bas.avatar_url
+        FROM
+            student_register reg
+        LEFT JOIN student_basic_info bas ON reg.student_id = bas.student_id
+        WHERE
+            reg.email = #{email}
+    </select>
+
+    <!--  添加学生注册表信息  -->
+    <insert id="insertStudentRegister" parameterType="studentInsertVO">
+        INSERT INTO student_register (
+            student_id,
+            email,
+            password,
+            status,
+            delete_flag,
+            create_time,
+            update_time
+            )
+        VALUES(
+            #{studentId},
+            #{email},
+            #{password},
+            0,
+            0,
+            now(),
+            now()
+            )
+    </insert>
+
+    <!--  添加学生表信息  -->
+    <insert id="insertStudentInfo" parameterType="studentInsertVO">
+        INSERT INTO student_basic_info (
+            student_id,
+            student_num,
+            student_name,
+            mobile,
+            sex,
+            age,
+            id_type,
+            id_num,
+            birthday,
+            native_place,
+            provinces_id,
+            cities_id,
+            areas_id,
+            detail_addr,
+            delete_flag,
+            create_time,
+            update_time,
+            remark
+            )
+        VALUES(
+            #{studentId},
+            #{studentNum},
+            #{studentName},
+            #{mobile},
+            #{sex},
+            #{age},
+            #{idType},
+            #{idNum},
+            #{birthday},
+            #{nativePlace},
+            #{provincesId},
+            #{citiesId},
+            #{areasId},
+            #{detailAddr},
+            0,
+            now(),
+            now(),
+            null
+            )
+    </insert>
+
+    <!--  查询学生信息-分页  -->
+    <select id="listStudentPage" resultType="BasicInfo">
+        SELECT * FROM student_basic_info
+        <where>
+            delete_flag = '0'
+            <if test="studentName != null and studentName !=''">
+                and student_name like concat('%', #{studentName}, '%')
+            </if>
+            <if test="mobile != null and mobile !=''">
+                and mobile like concat('%', #{mobile}, '%')
+            </if>
+            <if test="sex != null and sex != ''">
+                and sex = #{sex}
+            </if>
+            <if test="age != null and age !=''">
+                and age like concat('%', #{age}, '%')
+            </if>
+            <if test="idNum != null and idNum !=''">
+                and id_num like concat('%', #{idNum}, '%')
+            </if>
+            limit #{pageNum}, #{pageSize}
+        </where>
+    </select>
+
+    <!--  查询学生信息总条数  -->
+    <select id="selectTotal" resultType="Integer">
+        SELECT count(*) from student_basic_info
+        <where>
+            delete_flag = '0'
+            <if test="studentName != null and studentName !=''">
+                and student_name like concat('%', #{studentName}, '%')
+            </if>
+            <if test="mobile != null and mobile !=''">
+                and mobile like concat('%', #{mobile}, '%')
+            </if>
+            <if test="sex != null and sex != ''">
+                and sex = #{sex}
+            </if>
+            <if test="age != null and age !=''">
+                and age like concat('%', #{age}, '%')
+            </if>
+            <if test="idNum != null and idNum !=''">
+                and id_num like concat('%', #{idNum}, '%')
+            </if>
+        </where>
+    </select>
+
+    <!--  编辑学生信息  -->
+    <update id="updateStudentInfo" parameterType="StudentInsertVO">
+        UPDATE student_basic_info
+        <set>
+            <if test="studentNum != null and studentNum != ''">
+            student_num = #{studentNum},
+            </if>
+            <if test="studentName != null and studentName != ''">
+            student_name = #{studentName},
+            </if>
+            <if test="mobile != null and mobile != ''">
+            mobile = #{mobile},
+            </if>
+            <if test="sex != null and sex != ''">
+            sex = #{sex},
+            </if>
+            <if test="age != null and age != ''">
+            age = #{age},
+            </if>
+            <if test="idType != null and idType != ''">
+            id_type = #{idType},
+            </if>
+            <if test="idNum != null and idNum != ''">
+            id_num = #{idNum},
+            </if>
+            <if test="birthday != null and birthday != ''">
+            birthday = #{birthday},
+            </if>
+            <if test="nativePlace != null and nativePlace != ''">
+            native_place = #{nativePlace},
+            </if>
+            <if test="provincesId != null and provincesId != ''">
+            provinces_id = #{provincesId},
+            </if>
+            <if test="citiesId != null and citiesId != ''">
+            cities_id = #{citiesId},
+            </if>
+            <if test="areasId != null and areasId != ''">
+            areas_id = #{areasId},
+            </if>
+            <if test="detailAddr != null and detailAddr != ''">
+            detail_addr = #{detailAddr},
+            </if>
+            update_time = now(),
+            <if test="avatarUrl != null and avatarUrl != ''">
+                avatar_url = #{avatarUrl}
+            </if>
+        </set>
+        WHERE
+        student_id = #{studentId}
+    </update>
+
+    <!--  逻辑删除学生信息  -->
+    <update id="deleteStudentInfo" parameterType="String">
+        UPDATE student_basic_info bas,
+            student_register reg
+        SET bas.delete_flag = true,
+            reg.delete_flag = true
+        WHERE
+            bas.student_id = #{studentId}
+          AND reg.student_id = #{studentId}
+    </update>
+
+    <!--  批量逻辑删除学生信息  -->
+    <update id="listDelStudentInfo" parameterType="String">
+        UPDATE student_basic_info bas,
+            student_register reg
+        SET bas.delete_flag = true,
+            reg.delete_flag = true
+        WHERE
+            bas.student_id
+        IN(<foreach collection="studentId" item="student_id" separator=",">
+            #{student_id}
+        </foreach>)
+        AND reg.student_id
+        IN(<foreach collection="studentId" item="student_id" separator=",">
+            #{student_id}
+        </foreach>)
+    </update>
+
+    <!--  全查学生信息 - 导出  -->
+    <select id="listStudentInfo" resultType="StudentInsertDTO">
+        SELECT
+            reg.email,
+            reg. PASSWORD,
+            bas.*
+        FROM
+            student_register reg
+                LEFT JOIN student_basic_info bas ON reg.student_id = bas.student_id
+        WHERE bas.delete_flag = 0
+    </select>
+
+    <!--  添加学生注册表信息 - 导入  -->
+    <insert id="insertListStudentRegister" parameterType="StudentInsertDTO">
+        INSERT INTO student_register (
+            student_id,
+            email,
+            password,
+            status,
+            delete_flag,
+            create_time,
+            update_time
+        )
+        VALUES
+        <foreach collection='list' item='studentInfo'   separator=','>
+           (#{studentInfo.studentId},#{studentInfo.email},#{studentInfo.password},0,0,now(),now())
+        </foreach>
+    </insert>
+
+    <!--  添加学生表信息 - 导入  -->
+    <insert id="insertListStudentInfo" parameterType="StudentInsertDTO">
+        INSERT INTO student_basic_info (
+            student_id,
+            student_num,
+            student_name,
+            mobile,
+            sex,
+            age,
+            id_type,
+            id_num,
+            birthday,
+            native_place,
+            provinces_id,
+            cities_id,
+            areas_id,
+            detail_addr,
+            delete_flag,
+            create_time,
+            update_time,
+            remark
+        )
+        VALUES
+        <foreach collection='list' item='studentInfo' separator=','>
+            (#{studentInfo.studentId},
+             #{studentInfo.studentNum},
+             #{studentInfo.studentName},
+             #{studentInfo.mobile},
+             #{studentInfo.sex},
+             #{studentInfo.age},
+             #{studentInfo.idType},
+             #{studentInfo.idNum},
+             #{studentInfo.birthday},
+             #{studentInfo.nativePlace},
+             #{studentInfo.provincesId},
+             #{studentInfo.citiesId},
+             #{studentInfo.areasId},
+             #{studentInfo.detailAddr},
+             0,
+             now(),
+             now(),
+             null)
+        </foreach>
+    </insert>
+
+    <!--  重置学生密码  -->
+    <update id="updateStuPass" parameterType="UserLoginVO">
+        UPDATE student_register
+        SET password = #{passWord}
+        WHERE
+            student_id = #{studentId}
+    </update>
+
+    <!--  查询登录学生信息  -->
+    <select id="getStuInfo" resultType="StudentInsertDTO">
+        SELECT
+            bas.*,
+            reg.email,
+            reg.password
+        FROM
+            student_register reg
+                LEFT JOIN student_basic_info bas ON reg.student_id = bas.student_id
+        WHERE bas.student_id = #{studentId}
+    </select>
+
+    <!--  根据Token查询学生信息  -->
+    <select id="getTokenStu" resultType="StudentLoginDTO">
+        SELECT
+            bas.student_id,
+            bas.student_num,
+            bas.student_name,
+            reg.email,
+            reg.password,
+            bas.delete_flag,
+            bas.avatar_url
+        FROM
+            student_register reg
+                LEFT JOIN student_basic_info bas ON reg.student_id = bas.student_id
+        WHERE
+            reg.student_id = #{studentId}
+    </select>
+
+</mapper>

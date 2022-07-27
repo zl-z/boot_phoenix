@@ -1,0 +1,219 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.buba.boot_phoenix.grade.mapper.GradeMapper">
+
+    <!--  模糊查-分页 班级信息  -->
+    <select id="listGrade" resultType="GradeFullDTO">
+        SELECT
+            g.pk_id,
+            g.grade_id,
+            g.grade_name,
+            g.students_number,
+            g.class_teacher_id,
+            g.class_teacher_name,
+            g.lecturer_id,
+            g.lecturer_name,
+            g.classroom_classroom_id,
+            g.classroom_classroom_number,
+            g.create_time,
+            g.update_time,
+            count( student_id ) already
+        FROM
+            grade g
+        LEFT JOIN
+        (SELECT grade_grade_id,student_id from student_grade_relation where delete_flag = false) s
+        ON g.grade_id = s.grade_grade_id
+        <where>
+            g.delete_flag = false
+            <if test="gradeName != null and gradeName !=''">
+                and g.grade_name like concat('%', #{gradeName}, '%')
+            </if>
+            <if test="classTeacherName != null and classTeacherName !=''">
+                and g.class_teacher_name = #{classTeacherName}
+            </if>
+            <if test="lecturerName != null and lecturerName !=''">
+                and g.lecturer_name = #{lecturerName}
+            </if>
+        </where>
+        GROUP BY
+        g.grade_name
+        ORDER BY g.pk_id DESC
+        limit #{pageNum}, #{pageSize}
+    </select>
+
+    <!--  统计班级信息总条数  -->
+    <select id="gradeTotal" resultType="Integer">
+        SELECT
+            count( * ) total
+        FROM
+            (SELECT
+                 count( grade_name )
+            FROM
+                grade g
+            LEFT JOIN
+                     (SELECT grade_grade_id,student_id from student_grade_relation where delete_flag = false) s
+            ON g.grade_id = s.grade_grade_id
+            <where>
+                g.delete_flag = false
+                <if test="gradeName != null and gradeName !=''">
+                    and g.grade_name like concat('%', #{gradeName}, '%')
+                </if>
+                <if test="classTeacherName != null and classTeacherName !=''">
+                    and g.class_teacher_name = #{classTeacherName}
+                </if>
+                <if test="lecturerName != null and lecturerName !=''">
+                    and g.lecturer_name = #{lecturerName}
+                </if>
+            </where>
+            GROUP BY
+            g.grade_name) grade
+    </select>
+
+    <!--  更新班级学生数量  -->
+    <select id="getStuNum" resultType="GradeFullDTO">
+        SELECT
+            g.students_number,
+            count( s.student_id ) already
+        FROM
+            grade g
+                LEFT JOIN (	SELECT grade_grade_id,student_id from student_grade_relation where delete_flag = false) s ON g.grade_id = s.grade_grade_id
+        WHERE  g.delete_flag = false AND g.grade_name = #{gradeName}
+        GROUP BY
+            g.grade_name
+        ORDER BY
+            g.pk_id DESC
+    </select>
+
+    <!--  编辑班级信息  -->
+    <update id="updateGrade" parameterType="GradeAddVO">
+        UPDATE grade
+        <set>
+            grade_id = #{gradeNewId},
+            grade_name = #{gradeName},
+            class_teacher_id = #{classTeacherId},
+            class_teacher_name = #{classTeacherName},
+            lecturer_id = #{lecturerId},
+            lecturer_name = #{lecturerName},
+            students_number = #{studentsNumber},
+            classroom_classroom_id = #{classroomClassroomId},
+            classroom_classroom_number = #{classroomClassroomNumber},
+            update_time = now()
+        </set>
+        WHERE
+        grade_id = #{gradeId}
+    </update>
+
+    <!--  批量删除班级信息  -->
+    <update id="delGradeInfo" parameterType="String">
+        UPDATE grade
+        SET delete_flag = true
+        WHERE
+        grade_id
+        IN(<foreach collection="ids" item="grade_id" separator=",">
+        #{grade_id}
+    </foreach>)
+    </update>
+
+    <!--  查询班级学生信息  -->
+    <select id="getStuInfo" resultType="StuDTO">
+        SELECT
+            s.student_id,
+            s.student_num,
+            s.student_name,
+            s.mobile,
+            s.sex,
+            s.id_type,
+            s.id_num,
+            s.native_place
+        FROM
+            student_basic_info s
+        RIGHT JOIN
+        ( SELECT student_id FROM student_grade_relation WHERE grade_grade_name = #{gradeName} AND delete_flag = FALSE ) g
+        ON s.student_id = g.student_id
+        <where>
+            s.delete_flag = FALSE
+            <if test="studentName != null and studentName !=''">
+                and s.student_name like concat('%', #{studentName}, '%')
+            </if>
+            <if test="mobile != null and mobile !=''">
+                and mobile like concat('%', #{mobile}, '%')
+            </if>
+            <if test="sex != null and sex !=''">
+                and sex = #{sex}
+            </if>
+        </where>
+        limit #{pageNum}, #{pageSize}
+    </select>
+
+    <!--  统计班级学生信息总条数  -->
+    <select id="stuTotal" resultType="Integer">
+        SELECT count(*) total
+        FROM (SELECT
+        s.student_id,
+        s.student_num,
+        s.student_name,
+        s.mobile,
+        s.sex,
+        s.id_type,
+        s.id_num,
+        s.native_place
+        FROM
+        student_basic_info s
+        RIGHT JOIN
+        ( SELECT student_id FROM student_grade_relation WHERE grade_grade_name = #{gradeName} AND delete_flag = FALSE ) g
+        ON s.student_id = g.student_id
+        <where>
+            s.delete_flag = FALSE
+            <if test="studentName != null and studentName !=''">
+                and s.student_name like concat('%', #{studentName}, '%')
+            </if>
+            <if test="mobile != null and mobile !=''">
+                and mobile like concat('%', #{mobile}, '%')
+            </if>
+            <if test="sex != null and sex !=''">
+                and sex = #{sex}
+            </if>
+        </where>) total
+    </select>
+
+    <!--  逻辑删除班级学生信息  -->
+    <update id="delClassStu" parameterType="String">
+        UPDATE student_grade_relation
+        SET delete_flag = TRUE
+        WHERE
+            student_id
+        IN(<foreach collection="studentId" item="student_id" separator=",">
+        #{student_id}
+    </foreach>)
+    </update>
+
+    <!--  修改学生是否入班  -->
+    <update id="updateStuTheClass">
+        UPDATE student_basic_info
+        <set>
+            <if test="bL != null">
+                the_class = #{bL}
+            </if>
+        </set>
+        WHERE
+        student_id = #{studentId}
+    </update>
+
+    <!--  班级学生表添加  -->
+    <insert id="insertGradeStudent" parameterType="GradeStuAddVO">
+        INSERT INTO student_grade_relation (
+            student_id,
+            grade_grade_id,
+            grade_grade_name,
+            create_time,
+            update_time
+        )VALUES(
+            #{studentId},
+            #{gradeId},
+            #{gradeName},
+            now(),
+            now()
+            )
+    </insert>
+
+</mapper>

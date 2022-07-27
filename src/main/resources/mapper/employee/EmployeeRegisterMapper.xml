@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.buba.boot_phoenix.employee.mapper.EmployeeRegisterMapper">
+
+    <!--  教师登录信息  -->
+    <select id="getTeacherLogin" resultType="EmployeeLoginDTO">
+        SELECT
+            info.employee_id,
+            info.employee_no,
+            info.employee_name,
+            reg.email,
+            reg. PASSWORD,
+            info.phone_num,
+            info.delete_flag,
+            info.avatar_url
+        FROM
+            employee_register reg
+                LEFT JOIN employee_info info ON reg.user_id = info.employee_id
+        WHERE
+            reg.email = #{email}
+    </select>
+
+    <!--  重置老师密码  -->
+    <update id="updateTeaPass" parameterType="UserLoginVO">
+        UPDATE employee_register
+        SET password = #{passWord}
+        WHERE
+            user_id = #{studentId}
+    </update>
+
+    <!--  查询登录老师信息  -->
+    <select id="getTeaInfo" resultType="EmployeeInfo">
+        select * from employee_info where employee_id = #{studentId}
+    </select>
+
+    <!--  编辑老师个人信息  -->
+    <update id="updateTea" parameterType="EmployeeInfo">
+        UPDATE employee_info
+        SET student_num = #{studentNum},
+            student_name = #{studentName},
+            mobile = #{mobile},
+            sex = #{sex},
+            age = #{age},
+            id_type = #{idType},
+            id_num = #{idNum},
+            birthday = #{birthday},
+            native_place = #{nativePlace},
+            provinces_id = #{provincesId},
+            cities_id = #{citiesId},
+            areas_id = #{areasId},
+            detail_addr = #{detailAddr},
+            update_time = now()
+        WHERE
+            student_id = #{studentId}
+    </update>
+</mapper>

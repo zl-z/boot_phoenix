@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.buba.boot_phoenix.classroom.mapper.ClassroomMapper">
+
+    <!--  编辑教室信息  -->
+    <update id="updateClassRoom" parameterType="ClassSaveVO">
+        UPDATE classroom
+        <set>
+            area = #{area},
+            building_no = #{buildingNo},
+            building_floor = #{buildingFloor},
+            classroom_id = #{classroomNewId},
+            classroom_number = #{classroomNumber},
+            classroom_name = #{classroomName},
+            galleryful = #{galleryful},
+            use_status = #{useStatus}
+        </set>
+        WHERE
+        classroom_id = #{classroomId}
+    </update>
+
+    <!--  删除教室信息  -->
+    <update id="deleteClassRoom" parameterType="String">
+        UPDATE classroom
+        SET delete_flag = true
+        WHERE
+            classroom_id = #{classroomId}
+    </update>
+
+    <!--  批量删除教室信息  -->
+    <update id="listDelClassRoom" parameterType="String">
+        UPDATE classroom
+        SET delete_flag = true
+        WHERE
+        classroom_id
+        IN(<foreach collection="classroomId" item="classroom_id" separator=",">
+            #{classroom_id}
+        </foreach>)
+    </update>
+
+    <!--  添加教室信息 - 导入  -->
+    <insert id="insertListClassRoom" parameterType="Classroom">
+        INSERT INTO classroom (
+        area,
+        building_no,
+        building_floor,
+        classroom_id,
+        classroom_number,
+        classroom_name,
+        galleryful,
+        use_status,
+        create_time,
+        update_time
+        )
+        VALUES
+        <foreach collection='list' item='cla' separator=','>
+            (#{cla.area},#{cla.buildingNo},#{cla.buildingFloor}, #{cla.classroomId}, #{cla.classroomNumber}, #{cla.classroomName}, #{cla.galleryful}, #{cla.useStatus}, now(), now())
+        </foreach>
+    </insert>
+
+</mapper>
